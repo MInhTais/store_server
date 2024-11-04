@@ -11,6 +11,7 @@ async function bootstrap() {
   const configService = app.get(EnvConfigService);
   const port = configService.getPort('PORT') || 3000;
   console.log('Server listening on port', port ?? 3000);
+  console.log('Current NODE_ENV:', process.env.NODE_ENV);
 
   app.useGlobalPipes(
     new ValidationPipe({

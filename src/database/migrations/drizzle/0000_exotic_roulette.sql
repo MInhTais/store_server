@@ -134,6 +134,24 @@ CREATE TABLE IF NOT EXISTS "login_history" (
 	"ip_address" varchar(50)
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "chats" (
+	"chat_id" serial PRIMARY KEY NOT NULL,
+	"user_one_email" varchar(100) NOT NULL,
+	"user_two_email" varchar(100),
+	"store_id" integer,
+	"is_store_chat" boolean DEFAULT false,
+	"created_at" timestamp DEFAULT CURRENT_TIMESTAMP
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "chat_messages" (
+	"message_id" serial PRIMARY KEY NOT NULL,
+	"chat_id" serial NOT NULL,
+	"sender_email" varchar(100),
+	"store_id" integer,
+	"content" text NOT NULL,
+	"created_at" timestamp DEFAULT CURRENT_TIMESTAMP
+);
+--> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "user_roles" ADD CONSTRAINT "user_roles_user_email_fkey" FOREIGN KEY ("user_email") REFERENCES "public"."users"("email") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
@@ -244,6 +262,42 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "login_history" ADD CONSTRAINT "login_history_user_email_fkey" FOREIGN KEY ("user_email") REFERENCES "public"."users"("email") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "chats" ADD CONSTRAINT "chats_user_one_email_fkey" FOREIGN KEY ("user_one_email") REFERENCES "public"."users"("email") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "chats" ADD CONSTRAINT "chats_user_two_email_fkey" FOREIGN KEY ("user_two_email") REFERENCES "public"."users"("email") ON DELETE set null ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "chats" ADD CONSTRAINT "chats_store_id_fkey" FOREIGN KEY ("store_id") REFERENCES "public"."stores"("store_id") ON DELETE set null ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_chat_id_fkey" FOREIGN KEY ("chat_id") REFERENCES "public"."chats"("chat_id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_sender_email_fkey" FOREIGN KEY ("sender_email") REFERENCES "public"."users"("email") ON DELETE set null ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_store_id_fkey" FOREIGN KEY ("store_id") REFERENCES "public"."stores"("store_id") ON DELETE set null ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

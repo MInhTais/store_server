@@ -14,4 +14,10 @@ export class AuthController {
     const user = await this.authService.login(email, password);
     return getApiResponse('Login success', user);
   }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('refresh-token')
+  async refreshToken(@Body('refreshToken') refreshToken: string) {
+    return this.authService.refreshToken(refreshToken);
+  }
 }

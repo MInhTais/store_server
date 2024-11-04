@@ -1,26 +1,33 @@
-import 'dotenv/config';
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { drizzle as dbLocal } from 'drizzle-orm/node-postgres';
+import { drizzle } from 'drizzle-orm/neon-http';
+import { neon } from '@neondatabase/serverless';
 import { Pool } from 'pg';
 import * as schema from '../entities/schema';
+import { config } from 'dotenv';
 
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT),
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  ssl: false,
-});
+config({ path: '.env' });
 
-pool
-  .connect()
-  .then(() => {
-    console.log('DB connected successfully');
-  })
-  .catch((err) => {
-    console.log(err);
+const isNeon = process.env.USE_NEON === 'true';
+
+let db;
+if (isNeon) {
+  const sql = neon(process.env.NEON_DATABASE_URL!);
+  db = drizzle(sql, { schema });
+} else {
+  const pool = new Pool({
+    connectionString: process.env.LOCAL_DATABASE_URL,
   });
 
-const db = drizzle(pool, { schema });
+  pool
+    .connect()
+    .then(() => {
+      console.log('DB connected successfully');
+    })
+    .catch((err) => {
+      console.log('DB connection error:', err);
+    });
+
+  db = dbLocal(pool, { schema });
+}
 
 export default db;

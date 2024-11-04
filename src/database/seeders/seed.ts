@@ -9,6 +9,10 @@ const main = async () => {
     await db.delete(schema.roles);
     await db.delete(schema.users);
     await db.delete(schema.userRoles);
+    await db.delete(schema.refreshTokens);
+    await db.delete(schema.stores);
+    await db.delete(schema.chats);
+    await db.delete(schema.chatMessages);
 
     console.log('Sending database');
 
@@ -78,6 +82,34 @@ const main = async () => {
       {
         userEmail: 'minhanh@gmail.com',
         roleName: Roles.RESTAURANT_MANAGER,
+      },
+    ]);
+
+    await db.insert(schema.stores).values([
+      {
+        storeId: 1,
+        userEmail: 'minhtai2019cb2@gmail.com',
+        storeName: 'Store One',
+        qrCode: 'QR_CODE_1',
+        createdAt: new Date().toISOString(),
+      },
+      {
+        storeId: 2,
+        userEmail: 'minhanh@gmail.com',
+        storeName: 'Store Two',
+        qrCode: 'QR_CODE_2',
+        createdAt: new Date().toISOString(),
+      },
+    ]);
+
+    await db.insert(schema.chats).values([
+      {
+        chatId: 1,
+        userOneEmail: 'minhtai2019cb2@gmail.com',
+        userTwoEmail: 'minhanh@gmail.com', // Chat giữa hai người dùng
+        storeId: null, // Không có cửa hàng
+        isStoreChat: false,
+        createdAt: '2024-11-01T10:00:00Z',
       },
     ]);
 

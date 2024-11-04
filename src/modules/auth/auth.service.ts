@@ -1,17 +1,50 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UserService } from '../users/user.service';
 import { removePassword } from '../../common/utils/utils';
-import { EnvConfigService } from '../../config/env.config';
+import db from '../../database/db/db_connect';
+import { refreshTokens } from '../../database/entities/refresh_tokens.entity';
+import { TokenService } from './token.service';
+import { eq } from 'drizzle-orm';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
-    private readonly jwtService: JwtService,
-    private readonly envConfigService: EnvConfigService,
+    private tokenService: TokenService,
   ) {}
+
+  async saveRefreshToken(userEmail: string, refreshToken: string) {
+    await db.insert(refreshTokens).values({ userEmail, refreshToken });
+  }
+
+  async refreshToken(rToken: string) {
+    try {
+      const payload = this.tokenService.verifyToken(rToken);
+      const user = await this.userService.findByEmail(payload.email);
+
+      if (!user) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      const isRefreshTokenValid = await db.query.refreshTokens.findFirst({
+        where: eq(refreshTokens.refreshToken, rToken),
+      });
+
+      if (!isRefreshTokenValid) {
+        throw new UnauthorizedException(
+          'Invalid refresh token: Token does not exist in the server',
+        );
+      }
+
+      const newAccessToken = this.tokenService.generateAccessToken(user);
+      return {
+        accessToken: newAccessToken,
+      };
+    } catch (error) {
+      throw new UnauthorizedException(error, 'Invalid refresh token');
+    }
+  }
 
   async login(email: string, password: string) {
     const userWithPassword = await this.userService.findByEmail(email);
@@ -27,21 +60,12 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = {
-      email: userWithPassword.email,
-      sub: userWithPassword.name,
-    };
-    const accessToken = this.jwtService.sign(payload, {
-      expiresIn:
-        this.envConfigService.getAccessTokenEx('ACCESS_TOKEN_EXPIRES') || '1h',
-    });
-    const refreshToken = this.jwtService.sign(payload, {
-      expiresIn:
-        this.envConfigService.getRefreshTokenEx('REFRESH_TOKEN_EXPIRES') ||
-        '7d',
-    });
     const user = removePassword(userWithPassword);
+    const accessToken = this.tokenService.generateAccessToken(userWithPassword);
+    const refreshToken =
+      this.tokenService.generateRefreshToken(userWithPassword);
 
+    await this.saveRefreshToken(userWithPassword.email, refreshToken);
     return {
       accessToken,
       refreshToken,

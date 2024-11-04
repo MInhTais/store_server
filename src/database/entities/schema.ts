@@ -14,3 +14,5 @@ export * from './order_history.entity';
 export * from './reviews.entity';
 export * from './promotions.entity';
 export * from './login_history.entity';
+export * from './chats.entity';
+export * from './chat_messages.entity';

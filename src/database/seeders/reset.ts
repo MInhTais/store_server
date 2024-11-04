@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import db from '../db/db_connect';
 
 async function reset() {
-  console.log('⏳ Resetting database...');
+  console.log('⏳ Resetting database...', process.env.NODE_ENV);
   const start = Date.now();
 
   try {
@@ -33,11 +33,14 @@ async function reset() {
       `);
 
     const end = Date.now();
-    console.log(`✅ Reset end & took ${end - start}ms`);
+    console.log(
+      `✅ Reset end & took ${end - start}ms from `,
+      process.env.NODE_ENV,
+    );
     console.log('');
     process.exit(0);
   } catch (err) {
-    console.error('❌ Reset failed');
+    console.error('❌ Reset failed from', process.env.NODE_ENV);
     console.error(err);
     process.exit(1);
   }

@@ -8,7 +8,6 @@ import {
 import { Reflector } from '@nestjs/core';
 import { users } from '../../../database/entities/user.entity';
 import { userRoles } from '../../../database/entities/user_roles.entity';
-// import { userroles, users } from '../../../database/entities/schema';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
