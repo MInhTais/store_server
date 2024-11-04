@@ -2,7 +2,6 @@ import {
   Injectable,
   CanActivate,
   ExecutionContext,
-  UnauthorizedException,
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -19,10 +18,6 @@ export class RolesGuard implements CanActivate {
     const user: typeof users.$inferSelect & {
       userRoles: (typeof userRoles.$inferSelect)[];
     } = request.user;
-
-    if (!user) {
-      throw new UnauthorizedException('Missing authentication token');
-    }
 
     if (!roles || roles.length === 0) {
       return true;
